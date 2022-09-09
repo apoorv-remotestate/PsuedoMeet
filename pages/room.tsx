@@ -1,5 +1,5 @@
 import { LiveKitRoom } from '@livekit/react-components';
-import { Box, Grid, Stack, TextField } from '@mui/material';
+import { Box, Grid, Stack, TextField, Typography } from '@mui/material';
 import Head from 'next/head';
 import {
     useCallback,
@@ -30,7 +30,7 @@ const Room = () => {
         if (process.browser) {
             (bubble?.current?.lastChild as any)?.scrollIntoView();
         }
-    }, [test]);
+    }, [chatMsgs]);
 
     useEffect(() => {
         if (router.query.video === 'true')
@@ -198,10 +198,17 @@ const Room = () => {
                         >
                             {chatMsgs.map((msg: string, index: number) => (
                                 <Box
-                                    sx={{ color: '#fff', padding: '10px' }}
+                                    sx={{
+                                        color: '#fff',
+                                        padding: '10px',
+                                        display: 'flex',
+                                        flexDirection: 'row',
+                                        // justifyContent: 'center',
+                                        alignCenter: 'center',
+                                    }}
                                     key={index}
                                 >
-                                    {msg}
+                                    <Typography sx={{}}> {msg}</Typography>
                                 </Box>
                             ))}
                         </Box>
@@ -223,13 +230,15 @@ const Room = () => {
                                             test2.length > 0
                                         ) {
                                             socket.current.send(
-                                                JSON.stringify({
-                                                    type: 'chat',
-                                                    data: {
-                                                        data: test2,
-                                                        userIds: [1, 2],
-                                                    },
-                                                })
+                                                new TextEncoder().encode(
+                                                    JSON.stringify({
+                                                        type: 'chat',
+                                                        data: {
+                                                            data: test2,
+                                                            userIds: [1, 2],
+                                                        },
+                                                    })
+                                                )
                                             );
                                             setTest2('');
                                         }
