@@ -42,10 +42,10 @@ const Room = () => {
     const part = 2;
 
     const socket = useRef({
-        addEventListener: (a: any, b: any) => null,
-        removeEventListener: (a: any, b: any) => null,
+        addEventListener: (a: any, b: any) => {},
+        removeEventListener: (a: any, b: any) => {},
         readyState: 0,
-        send: (a: any) => null,
+        send: (a: any) => {},
     });
 
     const listenToMsgs = useCallback(async (event: any) => {
