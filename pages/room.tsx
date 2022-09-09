@@ -1,14 +1,28 @@
 import { LiveKitRoom } from '@livekit/react-components';
 import { Box, Grid, Stack, TextField } from '@mui/material';
 import Head from 'next/head';
-import { useEffect, useMemo, useRef, useState } from 'react';
+import {
+    useCallback,
+    useContext,
+    useEffect,
+    useMemo,
+    useRef,
+    useState,
+} from 'react';
 import { createLocalVideoTrack, LocalVideoTrack } from 'livekit-client';
 import { VideoRenderer } from '@livekit/react-core';
+import { useRouter } from 'next/router';
+import { copyFileSync } from 'fs';
 
 const Room = () => {
     const [test, setTest] = useState<string[]>([]);
     const [test2, setTest2] = useState<string>('');
+    const [chatMsgs, setChatMsgs] = useState<any>([]);
     const [videoTrack, setVideoTrack] = useState<LocalVideoTrack>();
+
+    const router = useRouter();
+
+    const { url, userId } = router.query;
 
     const bubble = useRef<HTMLDivElement>(null);
 
@@ -19,22 +33,53 @@ const Room = () => {
     }, [test]);
 
     useEffect(() => {
-        // enable video by default
-        createLocalVideoTrack().then((track) => {
-            setVideoTrack(track);
-        });
+        if (router.query.video === 'true')
+            createLocalVideoTrack().then((track) => {
+                setVideoTrack(track);
+            });
+    }, [router.query.video]);
+
+    const part = 2;
+
+    const socket = useRef({
+        addEventListener: (a: any, b: any) => null,
+        removeEventListener: (a: any, b: any) => null,
+        readyState: 0,
+        send: (a: any) => null,
+    });
+
+    const listenToMsgs = useCallback(async (event: any) => {
+        if (socket.current.readyState === 1) {
+            const test = await event.data.arrayBuffer();
+            const res = JSON.parse(new TextDecoder().decode(test));
+            setChatMsgs((p: any) => [...p, res.messageText]);
+        }
     }, []);
 
-    const part = 4;
+    useEffect(() => {
+        if (url) {
+            try {
+                socket.current = new WebSocket(
+                    // 'ws://192.168.1.47:8056/chat?userID=2&senderID=1'
+                    // 'ws://dc88-223-233-79-230.in.ngrok.io/api/ws?userId=1'
+                    // 'ws://192.168.1.98:8081/api/ws?userId=1'
+                    `ws://${url}/api/ws?userId=${userId ?? 0}`
+                );
+
+                socket.current.addEventListener('message', listenToMsgs);
+            } catch (err) {
+                console.log(err);
+            }
+        }
+        return () => {
+            socket.current.removeEventListener('message', listenToMsgs);
+            // socket.current.close();
+        };
+    }, [listenToMsgs, url, userId]);
 
     const gridComp = useMemo(
         () => (
-            <Grid
-                // key={Math.random()}
-                item
-                xs={12}
-                md={part > 1 ? 6 : 12}
-            >
+            <Grid item xs={12} md={part > 1 ? 6 : 12}>
                 <Box
                     sx={{
                         borderRadius: '10px',
@@ -151,12 +196,12 @@ const Room = () => {
                             }}
                             ref={bubble}
                         >
-                            {test.map((test: string, index) => (
+                            {chatMsgs.map((msg: string, index: number) => (
                                 <Box
                                     sx={{ color: '#fff', padding: '10px' }}
                                     key={index}
                                 >
-                                    {test}
+                                    {msg}
                                 </Box>
                             ))}
                         </Box>
@@ -173,9 +218,27 @@ const Room = () => {
                                 }}
                                 onKeyDown={(e) => {
                                     if (e.key === 'Enter') {
-                                        setTest((prev) => [...prev, test2]);
-                                        setTest2('');
+                                        if (
+                                            socket.current.readyState === 1 &&
+                                            test2.length > 0
+                                        ) {
+                                            socket.current.send(
+                                                JSON.stringify({
+                                                    type: 'chat',
+                                                    data: {
+                                                        data: test2,
+                                                        userIds: [1, 2],
+                                                    },
+                                                })
+                                            );
+                                            setTest2('');
+                                        }
                                     }
+                                }}
+                                sx={{
+                                    '& input': {
+                                        color: '#fff',
+                                    },
                                 }}
                                 fullWidth
                             />

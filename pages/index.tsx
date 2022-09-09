@@ -3,12 +3,15 @@ import { Box } from '@mui/system';
 import type { NextPage } from 'next';
 import Head from 'next/head';
 import Image from 'next/image';
-import { useCallback, useMemo, useState } from 'react';
+import { useRouter } from 'next/router';
+import { useCallback, useContext, useEffect, useMemo, useState } from 'react';
+import { Context } from '../shared/context/authcontext';
 import styles from '../styles/Home.module.css';
 
 const Home: NextPage = () => {
-    const [state, setState] = useState({ roomName: '', userName: '' });
-    const [test, setTest] = useState(true);
+    const [state, setState] = useState({ userId: '', url: '' });
+
+    const router = useRouter();
 
     return (
         <>
@@ -41,12 +44,15 @@ const Home: NextPage = () => {
                 >
                     <TextField
                         sx={{ '& input': { color: '#fff' } }}
-                        placeholder='Room Name'
-                        label='Room Name'
+                        placeholder='Some Number'
+                        label='User Id'
                         margin='normal'
-                        value={state.roomName}
+                        value={state.userId}
                         onChange={(e) => {
-                            setState({ ...state, roomName: e.target.value });
+                            setState({
+                                ...state,
+                                userId: e.target.value,
+                            });
                         }}
                         color='error'
                         focused
@@ -55,12 +61,12 @@ const Home: NextPage = () => {
                     <TextField
                         sx={{ '& input': { color: '#fff' } }}
                         margin='normal'
-                        value={state.userName}
+                        value={state.url}
                         onChange={(e) => {
-                            setState({ ...state, userName: e.target.value });
+                            setState({ ...state, url: e.target.value });
                         }}
-                        placeholder='User Name'
-                        label='User Name'
+                        placeholder='someurl.com'
+                        label='URL'
                         color='error'
                         focused
                         fullWidth
@@ -70,34 +76,18 @@ const Home: NextPage = () => {
                         variant='contained'
                         fullWidth
                         color='error'
+                        onClick={() => {
+                            router.push({
+                                pathname: '/room',
+                                query: {
+                                    ...state,
+                                },
+                            });
+                        }}
                     >
                         Chat
                     </Button>
                 </Box>
-                {test ? (
-                    <Button
-                        sx={{ marginTop: '16px' }}
-                        variant='contained'
-                        color='error'
-                        onClick={() => setTest((prev) => !prev)}
-                    >
-                        URL
-                    </Button>
-                ) : (
-                    <TextField
-                        sx={{ '& input': { color: '#fff' } }}
-                        margin='normal'
-                        value={state.userName}
-                        onChange={(e) => {
-                            setState({ ...state, userName: e.target.value });
-                            if (e.target.value === 'test') setTest(true);
-                        }}
-                        placeholder='User Name'
-                        label='User Name'
-                        color='error'
-                        focused
-                    />
-                )}
             </Stack>
         </>
     );
