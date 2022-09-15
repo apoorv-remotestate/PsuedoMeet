@@ -9,7 +9,7 @@ import { Context } from '../shared/context/authcontext';
 import styles from '../styles/Home.module.css';
 
 const Home: NextPage = () => {
-    const [state, setState] = useState({ userId: '', url: '' });
+    const [state, setState] = useState({ userId: '', url: '', roomName: '' });
 
     const router = useRouter();
 
@@ -46,12 +46,13 @@ const Home: NextPage = () => {
                         sx={{ '& input': { color: '#fff' } }}
                         placeholder='Some Number'
                         label='User Id'
+                        name='userId'
                         margin='normal'
                         value={state.userId}
                         onChange={(e) => {
                             setState({
                                 ...state,
-                                userId: e.target.value,
+                                [e.target.name]: e.target.value,
                             });
                         }}
                         color='error'
@@ -62,11 +63,32 @@ const Home: NextPage = () => {
                         sx={{ '& input': { color: '#fff' } }}
                         margin='normal'
                         value={state.url}
+                        name='url'
                         onChange={(e) => {
-                            setState({ ...state, url: e.target.value });
+                            setState({
+                                ...state,
+                                [e.target.name]: e.target.value,
+                            });
                         }}
                         placeholder='someurl.com'
                         label='URL'
+                        color='error'
+                        focused
+                        fullWidth
+                    />
+                    <TextField
+                        sx={{ '& input': { color: '#fff' } }}
+                        margin='normal'
+                        value={state.roomName}
+                        name='roomName'
+                        onChange={(e) => {
+                            setState({
+                                ...state,
+                                [e.target.name]: e.target.value,
+                            });
+                        }}
+                        placeholder='Dinning hall'
+                        label='Room Name'
                         color='error'
                         focused
                         fullWidth

@@ -1,5 +1,4 @@
-import { LiveKitRoom } from '@livekit/react-components';
-import { Box, Grid, Stack, TextField, Typography } from '@mui/material';
+import { Box, Grid, TextField, Typography } from '@mui/material';
 import Head from 'next/head';
 import {
     useCallback,
@@ -9,20 +8,57 @@ import {
     useRef,
     useState,
 } from 'react';
-import { createLocalVideoTrack, LocalVideoTrack } from 'livekit-client';
-import { VideoRenderer } from '@livekit/react-core';
+import {
+    createLocalVideoTrack,
+    LocalVideoTrack,
+    RoomOptions,
+} from 'livekit-client';
+import {
+    VideoRenderer,
+    AudioRenderer,
+    useRoom,
+    useParticipant,
+} from '@livekit/react-core';
 import { useRouter } from 'next/router';
-import { copyFileSync } from 'fs';
+
+export const ParticipantRenderer = ({ participant }: { participant: any }) => {
+    const { isSpeaking, subscribedTracks } = useParticipant(participant);
+};
 
 const Room = () => {
     const [test, setTest] = useState<string[]>([]);
     const [test2, setTest2] = useState<string>('');
     const [chatMsgs, setChatMsgs] = useState<any>([]);
     const [videoTrack, setVideoTrack] = useState<LocalVideoTrack>();
+    const [token, setToken] = useState('');
+
+    const roomOptions: RoomOptions = {
+        adaptiveStream: true,
+        dynacast: true,
+    };
+    const { connect, isConnecting, room, error, participants, audioTracks } =
+        useRoom(roomOptions);
+    const init = useCallback(async () => {
+        const livekitUrl = 'ws://192.168.1.98:7880';
+        const livekitToken = token;
+        // initiate connection to the livekit room
+        try {
+            await connect(livekitUrl, livekitToken);
+        } catch (err) {
+            console.log(err);
+        }
+        // request camera and microphone permissions and publish tracks
+        await room?.localParticipant?.enableCameraAndMicrophone();
+    }, [connect, room?.localParticipant, token]);
+
+    useEffect(() => {
+        console.log(token, room);
+        init().catch(console.error);
+    }, [init, token, room]);
 
     const router = useRouter();
 
-    const { url, userId } = router.query;
+    const { url, userId, roomName } = router.query;
 
     const bubble = useRef<HTMLDivElement>(null);
 
@@ -52,6 +88,10 @@ const Room = () => {
         if (socket.current.readyState === 1) {
             const test = await event.data.arrayBuffer();
             const res = JSON.parse(new TextDecoder().decode(test));
+            if (res.type === 'create_room') {
+                setToken(res.data.accessToken);
+                return;
+            }
             setChatMsgs((p: any) => [...p, res.messageText]);
         }
     }, []);
@@ -63,7 +103,7 @@ const Room = () => {
                     // 'ws://192.168.1.47:8056/chat?userID=2&senderID=1'
                     // 'ws://dc88-223-233-79-230.in.ngrok.io/api/ws?userId=1'
                     // 'ws://192.168.1.98:8081/api/ws?userId=1'
-                    `ws://${url}/api/ws?userId=${userId ?? 0}`
+                    `ws://${url}/api/ws?userId=${userId}&roomName=${roomName}`
                 );
 
                 socket.current.addEventListener('message', listenToMsgs);
@@ -75,12 +115,27 @@ const Room = () => {
             socket.current.removeEventListener('message', listenToMsgs);
             // socket.current.close();
         };
-    }, [listenToMsgs, url, userId]);
+    }, [listenToMsgs, roomName, url, userId]);
+
+    useEffect(() => {
+        console.log('readyState:', socket.current.readyState);
+        if (socket.current.readyState === 1) {
+            socket.current.send(
+                new TextEncoder().encode(
+                    JSON.stringify({
+                        type: 'create_room',
+                        data: {},
+                    })
+                )
+            );
+        }
+    }, [socket.current.readyState]);
 
     const gridComp = useMemo(
         () => (
             <Grid item xs={12} md={part > 1 ? 6 : 12}>
                 <Box
+                    key='test'
                     sx={{
                         borderRadius: '10px',
                         overflow: 'hidden',
@@ -123,7 +178,7 @@ const Room = () => {
                 }}
                 columnSpacing={1}
             >
-                <Grid sx={{ height: '100%' }} item xs>
+                <Grid key='video' sx={{ height: '100%' }} item xs>
                     <Grid
                         container
                         direction={'column'}
@@ -173,7 +228,7 @@ const Room = () => {
                         </Grid>
                     </Grid>
                 </Grid>
-                <Grid sx={{ height: '100%' }} item xs={2}>
+                <Grid key='chat' sx={{ height: '100%' }} item xs={2}>
                     <Box
                         sx={{
                             borderRadius: '10px',
@@ -260,3 +315,6 @@ const Room = () => {
 };
 
 export default Room;
+// export const ParticipantRenderer = ({ participant }) => {
+//   const { isSpeaking, subscribedTracks } = useParticipant(participant)
+// }
