@@ -9,7 +9,12 @@ import { Context } from '../shared/context/authcontext';
 import styles from '../styles/Home.module.css';
 
 const Home: NextPage = () => {
-    const [state, setState] = useState({ userId: '', url: '', roomName: '' });
+    const [state, setState] = useState({
+        userId: '',
+        url: '',
+        roomName: '',
+        livekiturl: '',
+    });
 
     const router = useRouter();
 
@@ -89,6 +94,23 @@ const Home: NextPage = () => {
                         }}
                         placeholder='Dinning hall'
                         label='Room Name'
+                        color='error'
+                        focused
+                        fullWidth
+                    />
+                    <TextField
+                        sx={{ '& input': { color: '#fff' } }}
+                        margin='normal'
+                        value={state.livekiturl}
+                        name='livekiturl'
+                        onChange={(e) => {
+                            setState({
+                                ...state,
+                                [e.target.name]: e.target.value,
+                            });
+                        }}
+                        placeholder='Dinning hall'
+                        label='livekit URL'
                         color='error'
                         focused
                         fullWidth
