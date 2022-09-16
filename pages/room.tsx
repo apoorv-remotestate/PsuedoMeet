@@ -81,7 +81,7 @@ const Room = () => {
     const { connect, isConnecting, room, error, participants, audioTracks } =
         useRoom(roomOptions);
     const init = useCallback(async () => {
-        const livekitUrl = livekiturl as string;
+        const livekitUrl = `ws://${livekiturl}` as string;
         const livekitToken = token;
         // initiate connection to the livekit room
         try {
