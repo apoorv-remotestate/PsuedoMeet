@@ -32,7 +32,7 @@ export const ParticipantRenderer = ({
         useParticipant(participant);
 
     return (
-        <Grid item xs={12} md={participants.length > 1 ? 6 : 12}>
+        <Grid item xs={12} md={participants.length > 1 ? 6 : 11}>
             <Box
                 key='test'
                 sx={{
