@@ -23,6 +23,7 @@ import { useRouter } from 'next/router';
 
 export const ParticipantRenderer = ({ participant }: { participant: any }) => {
     const { isSpeaking, subscribedTracks } = useParticipant(participant);
+    console.log(isSpeaking, subscribedTracks);
 };
 
 const Room = () => {
@@ -39,7 +40,7 @@ const Room = () => {
     const { connect, isConnecting, room, error, participants, audioTracks } =
         useRoom(roomOptions);
     const init = useCallback(async () => {
-        const livekitUrl = 'ws://192.168.1.98:7880';
+        const livekitUrl = 'ws://192.168.0.183:7880';
         const livekitToken = token;
         // initiate connection to the livekit room
         try {
@@ -68,12 +69,21 @@ const Room = () => {
         }
     }, [chatMsgs]);
 
+    // useEffect(() => {
+    //     if (router.query.video === 'true')
+    //         createLocalVideoTrack().then((track) => {
+    //             setVideoTrack(track);
+    //         });
+    // }, [router.query.video]);
+
     useEffect(() => {
-        if (router.query.video === 'true')
-            createLocalVideoTrack().then((track) => {
-                setVideoTrack(track);
+        if (participants) {
+            console.log(participants);
+            participants.map((participant) => {
+                ParticipantRenderer({ participant });
             });
-    }, [router.query.video]);
+        }
+    }, [participants]);
 
     const part = 2;
 
